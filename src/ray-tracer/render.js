@@ -1,27 +1,13 @@
 import { Vector3 } from "three.js";
+
 import { clamp, inRange } from "./math";
 
-class Canvas {
-  ctx = null;
-  config = null;
+import { Canvas } from "./canvas";
+import { Camera } from "./camera";
 
-  constructor(config) {
-    this.config = config;
+export class Render {
+  #backgroundColor = "rgb(0,0,0)";
 
-    const element = document.getElementById(config.elementId);
-    this.ctx = element.getContext("2d");
-
-    element.height = config.screenHeight;
-    element.width = config.screenWidth;
-  }
-
-  clear() {
-    this.ctx.fillStyle = "rgb(0,0,0)";
-    this.ctx.fillRect(0, 0, this.config.screenHeight, this.config.screenWidth);
-  }
-}
-
-class Render {
   constructor(config, scene) {
     this.config = config;
     this.canvas = new Canvas(config);
@@ -59,14 +45,13 @@ class Render {
       }
     }
     if (!closest_shape) {
-      return "rgb(255,255,255)";
+      return this.#backgroundColor;
     }
     return closest_shape.color;
   }
 
   intersectRayShape(O, D, sphere) {
     const r = sphere.radius;
-    console.log(sphere);
     const CO = new Vector3(O.x, O.y, O.z).sub(sphere.center);
 
     const a = new Vector3(D.x, D.y, D.z).dot(D);
@@ -95,48 +80,3 @@ class Render {
     }
   }
 }
-
-class Camera {
-  O = new Vector3(0, 0, 0);
-  Vw = 1;
-  Vh = 1;
-  d = 1;
-
-  constructor(config) {
-    this.config = config;
-  }
-
-  castOnViewport(x, y) {
-    const { screenHeight: Ch, screenWidth: Cw } = this.config;
-    return new Vector3((x * this.Vw) / Cw, (y * this.Vh) / Ch, this.d);
-  }
-}
-
-const render = new Render(
-  {
-    elementId: "screen",
-    screenWidth: 256,
-    screenHeight: 256,
-  },
-  {
-    shapes: [
-      {
-        center: new Vector3(0, -1, 3),
-        radius: 1,
-        color: "rgb(255,0,0)",
-      },
-      {
-        center: new Vector3(2, 0, 4),
-        radius: 1,
-        color: "rgb(0, 0, 255)",
-      },
-      {
-        center: new Vector3(-2, 0, 4),
-        radius: 1,
-        color: "rgb(0, 255, 0)",
-      },
-    ],
-  }
-);
-
-render.draw();
