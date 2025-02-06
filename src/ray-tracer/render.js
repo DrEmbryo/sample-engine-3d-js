@@ -5,8 +5,10 @@ import { clamp, inRange } from "./math";
 import { Canvas } from "./canvas";
 import { Camera } from "./camera";
 
+import { AmbientLight, PointLight } from "./light";
+
 export class Render {
-  #backgroundColor = "rgb(0,0,0)";
+  #backgroundColor = new Vector3(0, 0, 0);
 
   constructor(config, scene) {
     this.config = config;
@@ -26,7 +28,8 @@ export class Render {
     const Sx = Cw / 2 + Cx;
     const Sy = Ch / 2 - Cy;
 
-    this.canvas.ctx.fillStyle = color;
+    const { x: r, y: g, z: b } = color;
+    this.canvas.ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
     this.canvas.ctx.fillRect(Sx, Sy, 1, 1);
   }
 
@@ -47,16 +50,33 @@ export class Render {
     if (!closest_shape) {
       return this.#backgroundColor;
     }
-    return closest_shape.color;
+
+    const { x: Ox, y: Oy, z: Oz } = O;
+    const P = new Vector3(Ox, Oy, Oz).addScalar(closest_t).multiply(D);
+
+    const { x: Px, y: Py, z: Pz } = P;
+    let N = new Vector3(Px, Py, Pz).sub(closest_shape.center);
+
+    const { x: Nx, y: Ny, z: Nz } = N;
+    N = new Vector3(Nx, Ny, Nz).divideScalar(N.length());
+
+    const computedLight = this.computeLighting(P, N);
+    const { x: CSCx, y: CSCy, z: CSCz } = closest_shape.color;
+    return new Vector3(CSCx, CSCy, CSCz).multiplyScalar(computedLight);
   }
 
   intersectRayShape(O, D, sphere) {
     const r = sphere.radius;
-    const CO = new Vector3(O.x, O.y, O.z).sub(sphere.center);
 
-    const a = new Vector3(D.x, D.y, D.z).dot(D);
-    const b = new Vector3(CO.x, CO.y, CO.z).dot(D) * 2;
-    const c = new Vector3(CO.x, CO.y, CO.z).dot(CO) - r * r;
+    const { x: Ox, y: Oy, z: Oz } = O;
+    const CO = new Vector3(Ox, Oy, Oz).sub(sphere.center);
+
+    const { x: Dx, y: Dy, z: Dz } = D;
+    const a = new Vector3(Dx, Dy, Dz).dot(D);
+
+    const { x: COx, y: COy, z: COz } = CO;
+    const b = new Vector3(COx, COy, COz).dot(D) * 2;
+    const c = new Vector3(COx, COy, COz).dot(CO) - Math.pow(r, 2);
 
     const discriminant = b * b - 4 * a * c;
     if (discriminant < 0) {
@@ -67,6 +87,38 @@ export class Render {
       t1: (-b + Math.sqrt(discriminant)) / (2 * a),
       t2: (-b - Math.sqrt(discriminant)) / (2 * a),
     };
+  }
+
+  computeLighting(P, N) {
+    let i = 0;
+
+    for (const light of this.scene.lights) {
+      if (light instanceof AmbientLight) {
+        i += light.intensity;
+      } else {
+        let L = null;
+
+        if (light instanceof PointLight) {
+          const { x: LPx, LPy, LPz } = light.position;
+          L = new Vector3(LPx, LPy, LPz).sub(P);
+        } else {
+          const { x: LDx, y: LDy, z: LDz } = light.direction;
+          L = new Vector3(LDx, LDy, LDz);
+        }
+
+        const { x: Nx, y: Ny, z: Nz } = N;
+        const { x: Lx, y: Ly, z: Lz } = L;
+        const n_dot_l = new Vector3(Nx, Ny, Nz).dot(L);
+
+        if (n_dot_l > 0) {
+          i +=
+            (light.intensity * n_dot_l) /
+            (new Vector3(Nx, Ny, Nz).length() *
+              new Vector3(Lx, Ly, Lz).length());
+        }
+      }
+    }
+    return i;
   }
 
   draw() {

@@ -1,6 +1,10 @@
 import { Vector3 } from "three.js";
-import { Sphere } from "./shapes";
+
 import { Render } from "./render";
+
+import { AmbientLight, DirectionalLight, PointLight } from "./light";
+
+import { Sphere } from "./shapes";
 
 const render = new Render(
   {
@@ -10,13 +14,15 @@ const render = new Render(
   },
   {
     shapes: [
-      new Sphere(new Vector3(0, -1, 3), 1, [255, 0, 0]),
-      new Sphere(new Vector3(2, 0, 4), 1, [0, 0, 255]),
-      new Sphere(new Vector3(-2, 0, 4), 1, [0, 255, 0]),
+      new Sphere(new Vector3(0, -1, 3), 1, new Vector3(255, 0, 0)),
+      new Sphere(new Vector3(2, 0, 4), 1, new Vector3(0, 0, 255)),
+      new Sphere(new Vector3(-2, 0, 4), 1, new Vector3(0, 255, 0)),
+      new Sphere(new Vector3(0, -5001, 0), 5000, new Vector3(255, 255, 0)),
     ],
     lights: [
-      { type: "ambient", intencity: 0.2 },
-      { type: "point", intensity: 0.6, position: new Vector3(2, 1, 0) },
+      new AmbientLight(0.2),
+      new PointLight(0.6, new Vector3(2, 1, 0)),
+      new DirectionalLight(0.2, new Vector3(1, 4, 4)),
     ],
   }
 );
