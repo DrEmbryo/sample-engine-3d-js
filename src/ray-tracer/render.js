@@ -34,20 +34,13 @@ export class Render {
   }
 
   traceRay(O, D, t_min, t_max) {
-    let closest_t = Infinity;
-    let closest_shape = null;
+    const { closest_shape, closest_t } = this.closestItersection(
+      O,
+      D,
+      t_min,
+      t_max
+    );
 
-    for (const shape of this.scene.shapes) {
-      const { t1, t2 } = this.intersectRayShape(O, D, shape);
-      if (inRange(t1, [t_min, t_max]) && t1 < closest_t) {
-        closest_t = t1;
-        closest_shape = shape;
-      }
-      if (inRange(t2, [t_min, t_max]) && t2 < closest_t) {
-        closest_t = t2;
-        closest_shape = shape;
-      }
-    }
     if (!closest_shape) {
       return this.#backgroundColor;
     }
@@ -72,6 +65,24 @@ export class Render {
     );
     const { x: CSCx, y: CSCy, z: CSCz } = closest_shape.color;
     return new Vector3(CSCx, CSCy, CSCz).multiplyScalar(computedLight);
+  }
+
+  closestItersection(O, D, t_min, t_max) {
+    let closest_t = Infinity;
+    let closest_shape = null;
+
+    for (const shape of this.scene.shapes) {
+      const { t1, t2 } = this.intersectRayShape(O, D, shape);
+      if (inRange(t1, [t_min, t_max]) && t1 < closest_t) {
+        closest_t = t1;
+        closest_shape = shape;
+      }
+      if (inRange(t2, [t_min, t_max]) && t2 < closest_t) {
+        closest_t = t2;
+        closest_shape = shape;
+      }
+    }
+    return { closest_shape, closest_t };
   }
 
   intersectRayShape(O, D, sphere) {
@@ -102,6 +113,7 @@ export class Render {
     let i = 0;
 
     for (const light of this.scene.lights) {
+      let t_max = 0;
       if (light instanceof AmbientLight) {
         i += light.intensity;
       } else {
@@ -110,11 +122,21 @@ export class Render {
         if (light instanceof PointLight) {
           const { x: LPx, LPy, LPz } = light.position;
           L = new Vector3(LPx, LPy, LPz).sub(P);
+          t_max = 1;
         } else {
           const { x: LDx, y: LDy, z: LDz } = light.direction;
           L = new Vector3(LDx, LDy, LDz);
+          t_max = Infinity;
         }
 
+        //shadow
+        const { closest_shape } = this.closestItersection(P, L, 0.001, t_max);
+
+        if (closest_shape != null) {
+          continue;
+        }
+
+        // diffuse
         const { x: Nx, y: Ny, z: Nz } = N;
         const { x: Lx, y: Ly, z: Lz } = L;
         const n_dot_l = new Vector3(Nx, Ny, Nz).dot(L);
@@ -126,6 +148,7 @@ export class Render {
               new Vector3(Lx, Ly, Lz).length());
         }
 
+        // specular
         if (s != -1) {
           const { x: Nx, y: Ny, z: Nz } = N;
           const n_dot_l = new Vector3(Nx, Ny, Nz).dot(L);
