@@ -36,6 +36,7 @@ export class Render {
   traceRay(O, D, t_min, t_max) {
     let closest_t = Infinity;
     let closest_shape = null;
+
     for (const shape of this.scene.shapes) {
       const { t1, t2 } = this.intersectRayShape(O, D, shape);
       if (inRange(t1, [t_min, t_max]) && t1 < closest_t) {
@@ -52,15 +53,23 @@ export class Render {
     }
 
     const { x: Ox, y: Oy, z: Oz } = O;
-    const P = new Vector3(Ox, Oy, Oz).addScalar(closest_t).multiply(D);
+    const P = new Vector3(Ox, Oy, Oz).addScalar(closest_t).multiply(D); // ray intersection
 
     const { x: Px, y: Py, z: Pz } = P;
-    let N = new Vector3(Px, Py, Pz).sub(closest_shape.center);
+    let N = new Vector3(Px, Py, Pz).sub(closest_shape.center); // sphere normal at intersection
 
     const { x: Nx, y: Ny, z: Nz } = N;
     N = new Vector3(Nx, Ny, Nz).divideScalar(N.length());
 
-    const computedLight = this.computeLighting(P, N);
+    const { x: Dx, y: Dy, z: Dz } = D;
+    const negativeD = new Vector3(Dx, Dy, Dz).multiplyScalar(-1);
+
+    const computedLight = this.computeLighting(
+      P,
+      N,
+      negativeD,
+      closest_shape.specular
+    );
     const { x: CSCx, y: CSCy, z: CSCz } = closest_shape.color;
     return new Vector3(CSCx, CSCy, CSCz).multiplyScalar(computedLight);
   }
@@ -89,7 +98,7 @@ export class Render {
     };
   }
 
-  computeLighting(P, N) {
+  computeLighting(P, N, V, s) {
     let i = 0;
 
     for (const light of this.scene.lights) {
@@ -115,6 +124,25 @@ export class Render {
             (light.intensity * n_dot_l) /
             (new Vector3(Nx, Ny, Nz).length() *
               new Vector3(Lx, Ly, Lz).length());
+        }
+
+        if (s != -1) {
+          const { x: Nx, y: Ny, z: Nz } = N;
+          const n_dot_l = new Vector3(Nx, Ny, Nz).dot(L);
+
+          const R = new Vector3(Nx, Ny, Nz)
+            .multiplyScalar(2)
+            .multiplyScalar(n_dot_l)
+            .sub(L);
+
+          const { x: Rx, y: Ry, z: Rz } = R;
+          const r_dot_v = new Vector3(Rx, Ry, Rz).dot(V);
+
+          if (r_dot_v > 0) {
+            i +=
+              light.intensity *
+              Math.pow(r_dot_v / (R.length() * V.length()), s);
+          }
         }
       }
     }

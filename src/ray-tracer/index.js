@@ -14,10 +14,15 @@ const render = new Render(
   },
   {
     shapes: [
-      new Sphere(new Vector3(0, -1, 3), 1, new Vector3(255, 0, 0)),
-      new Sphere(new Vector3(2, 0, 4), 1, new Vector3(0, 0, 255)),
-      new Sphere(new Vector3(-2, 0, 4), 1, new Vector3(0, 255, 0)),
-      new Sphere(new Vector3(0, -5001, 0), 5000, new Vector3(255, 255, 0)),
+      new Sphere(new Vector3(0, -1, 3), 1, new Vector3(255, 0, 0), 500),
+      new Sphere(new Vector3(2, 0, 4), 1, new Vector3(0, 0, 255), 500),
+      new Sphere(new Vector3(-2, 0, 4), 1, new Vector3(0, 255, 0), 10),
+      new Sphere(
+        new Vector3(0, -5001, 0),
+        5000,
+        new Vector3(255, 255, 0),
+        1000
+      ),
     ],
     lights: [
       new AmbientLight(0.2),
