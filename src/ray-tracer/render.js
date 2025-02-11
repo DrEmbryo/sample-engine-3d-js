@@ -33,7 +33,7 @@ export class Render {
     this.canvas.ctx.fillRect(Sx, Sy, 1, 1);
   }
 
-  traceRay(O, D, t_min, t_max) {
+  traceRay(O, D, t_min, t_max, recursion_depth) {
     const { closest_shape, closest_t } = this.closestItersection(
       O,
       D,
@@ -64,7 +64,41 @@ export class Render {
       closest_shape.specular
     );
     const { x: CSCx, y: CSCy, z: CSCz } = closest_shape.color;
-    return new Vector3(CSCx, CSCy, CSCz).multiplyScalar(computedLight);
+    const local_color = new Vector3(CSCx, CSCy, CSCz).multiplyScalar(
+      computedLight
+    );
+
+    const r = closest_shape.reflective;
+    if (recursion_depth <= 0 || r <= 0) {
+      return local_color;
+    }
+
+    const R = this.reflectRay(negativeD, N);
+    const reflected_color = this.traceRay(
+      P,
+      R,
+      0.001,
+      Infinity,
+      recursion_depth - 1
+    );
+
+    const { x: LCx, y: LCy, Z: LCz } = local_color;
+    const { x: RCx, y: RCy, Z: RCz } = reflected_color;
+
+    return new Vector3(LCx, LCy, LCz)
+      .multiplyScalar(1 - r)
+      .add(new Vector3(RCx, RCy, RCz).multiplyScalar(r));
+  }
+
+  reflectRay(R, N) {
+    const { x: Nx, y: Ny, z: Nz } = N;
+
+    const r_dot_n = new Vector3(Nx, Ny, Nz).dot(R);
+
+    return new Vector3(Nx, Ny, Nz)
+      .multiplyScalar(2)
+      .multiplyScalar(r_dot_n)
+      .sub(R);
   }
 
   closestItersection(O, D, t_min, t_max) {
@@ -174,10 +208,18 @@ export class Render {
 
   draw() {
     const { screenHeight: Ch, screenWidth: Cw } = this.config;
+    const recursion_depth = 3;
+
     for (let x = (-1 * Ch) / 2; x < Ch / 2; x++) {
       for (let y = (-1 * Cw) / 2; y < Ch / 2; y++) {
         const D = this.camera.castOnViewport(x, y);
-        const color = this.traceRay(this.camera.O, D, 1, Infinity);
+        const color = this.traceRay(
+          this.camera.O,
+          D,
+          1,
+          Infinity,
+          recursion_depth
+        );
         this.putPixel(x, y, color);
       }
     }
