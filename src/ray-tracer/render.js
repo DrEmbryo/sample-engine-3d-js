@@ -1,4 +1,4 @@
-import { Vector3 } from "three.js";
+import { Vector3 } from "three";
 
 import { clamp, inRange } from "./math";
 

@@ -1,4 +1,4 @@
-import { Vector3 } from "three.js";
+import { Vector3 } from "three";
 
 export class Camera {
   O = new Vector3(0, 0, 0);
