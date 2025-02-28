@@ -29,21 +29,53 @@ export class Render {
   }
 
   drawLine(P0, P1, color) {
-    let x0 = P0.x;
-    let y0 = P0.y;
-    let x1 = P1.x;
-    let y1 = P1.y;
-    if (P0.x > P1.x) {
-      x0 = P1.x;
-      y0 = P1.y;
-      x1 = P0.x;
-      y1 = P0.y;
+    let p0 = P0;
+    let p1 = P1;
+
+    const swap = () => {
+      let tmp = null;
+      tmp = p0;
+      p0 = p1;
+      p1 = tmp;
+    };
+
+    if (Math.abs(p1.x - p0.x) > Math.abs(p1.y - p0.y)) {
+      if (p0.x > p1.x) {
+        swap();
+      }
+
+      const ys = this.interpolate(p0, p1);
+
+      for (let x = p0.x; x < p1.x; x++) {
+        this.putPixel(x, ys[x - p0.x], color);
+      }
+    } else {
+      if (p0.y > p1.y) {
+        swap();
+      }
+
+      const xs = this.interpolate(p0, p1);
+
+      for (let y = p0.y; y < p1.y; y++) {
+        this.putPixel(xs[y - p0.y], y, color);
+      }
     }
-    const a = (y1 - y0) / (x1 - x0);
-    let y = y0;
-    for (let x = x0; x < x1; x++) {
-      this.putPixel(x, y, color);
-      y = y + a;
+  }
+
+  interpolate({ x: i0, y: d0 }, { x: i1, y: d1 }) {
+    if (i0 == i1) {
+      return [d0];
     }
+    const values = [];
+
+    const a = (d1 - d0) / (i1 - i0);
+    let d = d0;
+
+    for (let i = i0; i < i1; i++) {
+      values.push(d);
+      d = d + a;
+    }
+
+    return values;
   }
 }
