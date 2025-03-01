@@ -1,17 +1,12 @@
 import { Vector3 } from "three";
-
 import { Canvas } from "../ray-tracer/canvas";
 import { clamp } from "../ray-tracer/math";
 
 export class Render {
-  #backgroundColor = new Vector3(0, 0, 0);
-
-  constructor(config, scene) {
+  constructor(config) {
     this.config = config;
     this.canvas = new Canvas(config);
     this.canvas.clear();
-
-    this.scene = scene;
   }
 
   putPixel(x, y, color) {
@@ -64,7 +59,7 @@ export class Render {
     this.drawLine(p2, p0, color);
   }
 
-  drawFillTri({ p0: P0, p1: P1, p2: P2 }, color) {
+  drawShadedTri({ p0: P0, p1: P1, p2: P2 }, color) {
     let p0 = P0;
     let p1 = P1;
     let p2 = P2;
@@ -88,26 +83,56 @@ export class Render {
     }
 
     const x01 = this.interpolate({ x: p0.y, y: p0.x }, { x: p1.y, y: p1.x });
+    const h01 = this.interpolate({ x: p0.y, y: p0.h }, { x: p1.y, y: p1.h });
+
     const x12 = this.interpolate({ x: p1.y, y: p1.x }, { x: p2.y, y: p2.x });
+    const h12 = this.interpolate({ x: p1.y, y: p1.h }, { x: p2.y, y: p2.h });
+
     const x02 = this.interpolate({ x: p0.y, y: p0.x }, { x: p2.y, y: p2.x });
+    const h02 = this.interpolate({ x: p0.y, y: p0.h }, { x: p2.y, y: p2.h });
 
     x01.pop();
+    h01.pop();
+
     const x012 = [...x01, ...x12];
+    const h012 = [...h01, ...h12];
 
     let x_left = null;
+    let h_left = null;
     let x_right = null;
+    let h_right = null;
 
     const mid = Math.floor(x012.length / 2);
     if (x02[mid] < x012[mid]) {
       x_left = x02;
+      h_left = h02;
+
       x_right = x012;
+      h_right = h012;
     } else {
       x_left = x012;
+      h_left = h012;
+
       x_right = x02;
+      h_right = h02;
     }
+
     for (let y = p0.y; y < p2.y; y++) {
-      for (let x = x_left[y - p0.y]; x < x_right[y - p0.y]; x++) {
-        this.putPixel(x, y, color);
+      const x_l = x_left[y - p0.y];
+      const x_r = x_right[y - p0.y];
+
+      const h_segment = this.interpolate(
+        { x: x_l, y: h_left[y - p0.y] },
+        { x: x_r, y: h_right[y - p0.y] }
+      );
+
+      for (let x = x_l; x < x_r; x++) {
+        const { x: r, y: g, z: b } = color;
+        const shadedColor = new Vector3(r, g, b).multiplyScalar(
+          h_segment[x - x_l]
+        );
+
+        this.putPixel(x, y, shadedColor);
       }
     }
   }

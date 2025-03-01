@@ -1,7 +1,10 @@
+import { clamp } from "../ray-tracer/math";
+
 export class Point {
-  constructor(x, y) {
+  constructor(x, y, intencity) {
     this.x = x;
     this.y = y;
+    this.h = clamp(intencity, [0, 1]);
   }
 }
 

@@ -9,12 +9,11 @@ const render = new Render({
   screenHeight: 540,
 });
 
-render.drawFrameTri(
-  new Triangle(new Point(-200, -250), new Point(200, 50), new Point(20, 250)),
-  new Vector3(255, 255, 255)
-);
-
-render.drawFillTri(
-  new Triangle(new Point(-200, -250), new Point(200, 50), new Point(20, 250)),
+render.drawShadedTri(
+  new Triangle(
+    new Point(-200, -250, 0),
+    new Point(200, 50, 0),
+    new Point(20, 250, 1)
+  ),
   new Vector3(255, 0, 0)
 );
