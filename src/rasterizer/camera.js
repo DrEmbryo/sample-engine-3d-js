@@ -2,9 +2,9 @@ import { Vector3 } from "three";
 
 export class Camera {
   O = new Vector3(0, 0, 0);
-  Vw = 100000;
-  Vh = 100000;
-  d = 3;
+  Vw = 10000;
+  Vh = 10000;
+  d = 1;
 
   constructor(config) {
     this.config = config;

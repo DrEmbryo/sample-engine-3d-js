@@ -1,12 +1,15 @@
 import { Vector3 } from "three";
 import { Canvas } from "../ray-tracer/canvas";
 import { clamp } from "../ray-tracer/math";
+import { Camera } from "./camera";
+import { Triangle } from "./shapes";
 
 export class Render {
   constructor(config) {
     this.config = config;
     this.canvas = new Canvas(config);
     this.canvas.clear();
+    this.camera = new Camera(config);
   }
 
   putPixel(x, y, color) {
@@ -53,7 +56,7 @@ export class Render {
     }
   }
 
-  drawFrameTri({ p0, p1, p2 }, color) {
+  drawFrameTri({ p0, p1, p2, color }) {
     this.drawLine(p0, p1, color);
     this.drawLine(p1, p2, color);
     this.drawLine(p2, p0, color);
@@ -135,6 +138,31 @@ export class Render {
         this.putPixel(x, y, shadedColor);
       }
     }
+  }
+
+  renderShape(shape) {
+    const projected = {};
+
+    for (const V of shape.verticies) {
+      const { x, y, z } = V;
+      projected[`${x}${y}${z}`] = this.camera.projectVertex(V);
+    }
+
+    for (const T of shape.triangles) {
+      this.renderTriangel(T, projected);
+    }
+  }
+
+  renderTriangel(triangle, projected) {
+    const { p0, p1, p2, color } = triangle;
+    this.drawFrameTri(
+      new Triangle(
+        projected[`${p0.x}${p0.y}${p0.z}`],
+        projected[`${p1.x}${p1.y}${p1.z}`],
+        projected[`${p2.x}${p1.y}${p2.z}`],
+        color
+      )
+    );
   }
 
   swap(p0, p1) {
