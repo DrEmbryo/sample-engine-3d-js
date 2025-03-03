@@ -20,15 +20,23 @@ export class Triangle {
   }
 }
 
-export class Shape {
+export class Model {
   verticies = [];
   triangles = [];
 
-  constructor(verticies, edges) {
-    this.verticies = verticies;
+  constructor(verticies, edges, translation = new Vector3(1, 1, 1)) {
+    this.verticies = verticies.map((v) =>
+      new Vector3(v.x, v.y, v.z).add(translation)
+    );
+
     this.triangles = edges.map(
       ({ p0, p1, p2, color }) =>
-        new Triangle(verticies[p0], verticies[p1], verticies[p2], color)
+        new Triangle(
+          this.verticies[p0],
+          this.verticies[p1],
+          this.verticies[p2],
+          color
+        )
     );
   }
 }

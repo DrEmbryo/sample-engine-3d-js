@@ -1,7 +1,7 @@
 import { Vector3 } from "three";
 
 import { Render } from "./render";
-import { Shape } from "./shapes";
+import { Model } from "./shapes";
 
 const render = new Render({
   elementId: "screen",
@@ -9,7 +9,7 @@ const render = new Render({
   screenHeight: 540,
 });
 
-const cube = new Shape(
+const cube = new Model(
   [
     new Vector3(1, 1, 1),
     new Vector3(-1, 1, 1),
@@ -33,26 +33,8 @@ const cube = new Shape(
     { p0: 4, p1: 1, p2: 0, color: new Vector3(0, 0, 255) },
     { p0: 2, p1: 6, p2: 7, color: new Vector3(42, 42, 42) },
     { p0: 2, p1: 7, p2: 3, color: new Vector3(42, 42, 42) },
-  ]
+  ],
+  new Vector3(-1.5, 0, 7)
 );
 
 render.renderShape(cube);
-
-// render.drawFrameTri({
-//   p0: new Vector3(1, 1, 1),
-//   p1: new Vector3(-1, 1, 1),
-//   p2: new Vector3(-1, -1, 1),
-//   color: new Vector3(255, 255, 255),
-// });
-
-render.drawLine(
-  {
-    x: 18.51851851851852,
-    y: 18.51851851851852,
-  },
-  {
-    x: 18.51851851851852,
-    y: 18.51851851851852,
-  },
-  new Vector3(255, 255, 255)
-);
