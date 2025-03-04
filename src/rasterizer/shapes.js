@@ -20,11 +20,18 @@ export class Triangle {
   }
 }
 
-export class Model {
+export class Shape {
+  identifier = "";
   verticies = [];
   triangles = [];
 
-  constructor(verticies, edges, translation = new Vector3(1, 1, 1)) {
+  constructor(
+    identifier,
+    verticies,
+    edges,
+    translation = new Vector3(1, 1, 1)
+  ) {
+    this.identifier = identifier;
     this.verticies = verticies.map((v) =>
       new Vector3(v.x, v.y, v.z).add(translation)
     );
@@ -40,3 +47,17 @@ export class Model {
     );
   }
 }
+
+export class ShapeInstance {
+  identifier = "";
+  position = new Vector3(0, 0, 0);
+
+  constructor(identifier, position) {
+    this.identifier = identifier;
+    this.position = position;
+  }
+}
+
+export const shapes = {
+  cube: "cube",
+};

@@ -3,6 +3,7 @@ import { Canvas } from "../ray-tracer/canvas";
 import { clamp } from "../ray-tracer/math";
 import { Camera } from "./camera";
 import { Triangle } from "./shapes";
+import { Scene } from "./scene";
 
 export class Render {
   constructor(config) {
@@ -10,6 +11,7 @@ export class Render {
     this.canvas = new Canvas(config);
     this.canvas.clear();
     this.camera = new Camera(config);
+    this.scene = new Scene(config);
   }
 
   putPixel(x, y, color) {
@@ -140,12 +142,13 @@ export class Render {
     }
   }
 
-  renderShape(shape) {
+  renderShape(shape, translation = new Vector3(0, 0, 0)) {
     const projected = {};
 
     for (const V of shape.verticies) {
       const { x, y, z } = V;
-      projected[`${x}${y}${z}`] = this.camera.projectVertex(V);
+      const Vt = new Vector3(x, y, z).add(translation);
+      projected[`${x}${y}${z}`] = this.camera.projectVertex(Vt);
     }
 
     for (const T of shape.triangles) {
@@ -163,6 +166,16 @@ export class Render {
         color
       )
     );
+  }
+
+  renderScene() {
+    for (const shapeInstance of this.scene.objects) {
+      this.renderInstance(shapeInstance);
+    }
+  }
+
+  renderInstance(instance) {
+    this.renderShape(this.scene.shapes[instance.identifier], instance.position);
   }
 
   swap(p0, p1) {

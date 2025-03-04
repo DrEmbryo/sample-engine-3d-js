@@ -4,7 +4,7 @@ export class Camera {
   O = new Vector3(0, 0, 0);
   Vw = 100000;
   Vh = 100000;
-  d = 1;
+  d = 2;
 
   constructor(config) {
     this.config = config;

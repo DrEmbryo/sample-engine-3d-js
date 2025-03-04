@@ -1,15 +1,10 @@
 import { Vector3 } from "three";
 
 import { Render } from "./render";
-import { Model } from "./shapes";
+import { Shape, ShapeInstance, shapes } from "./shapes";
 
-const render = new Render({
-  elementId: "screen",
-  screenWidth: 540,
-  screenHeight: 540,
-});
-
-const cube = new Model(
+const cube = new Shape(
+  shapes.cube,
   [
     new Vector3(1, 1, 1),
     new Vector3(-1, 1, 1),
@@ -33,8 +28,18 @@ const cube = new Model(
     { p0: 4, p1: 1, p2: 0, color: new Vector3(0, 0, 255) },
     { p0: 2, p1: 6, p2: 7, color: new Vector3(42, 42, 42) },
     { p0: 2, p1: 7, p2: 3, color: new Vector3(42, 42, 42) },
-  ],
-  new Vector3(-1.5, 0, 7)
+  ]
 );
 
-render.renderShape(cube);
+const render = new Render({
+  elementId: "screen",
+  screenWidth: 540,
+  screenHeight: 540,
+  shapes: [cube],
+  objects: [
+    new ShapeInstance(shapes.cube, new Vector3(-1.5, 0, 7)),
+    new ShapeInstance(shapes.cube, new Vector3(1.25, 2, 7.5)),
+  ],
+});
+
+render.renderScene();
