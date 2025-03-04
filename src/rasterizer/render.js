@@ -1,4 +1,4 @@
-import { Vector3 } from "three";
+import { Vector3 } from "threejs-math";
 import { Canvas } from "../ray-tracer/canvas";
 import { clamp } from "../ray-tracer/math";
 import { Camera } from "./camera";

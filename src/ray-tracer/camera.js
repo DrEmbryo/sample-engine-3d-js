@@ -1,4 +1,4 @@
-import { Vector3 } from "three";
+import { Vector3 } from "threejs-math";
 
 export class Camera {
   O = new Vector3(0, 0, 0);

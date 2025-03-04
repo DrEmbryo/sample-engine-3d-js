@@ -1,4 +1,4 @@
-import { Vector3 } from "three";
+import { Vector3 } from "threejs-math";
 import { clamp } from "../ray-tracer/math";
 
 export class Point {
