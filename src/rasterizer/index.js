@@ -37,8 +37,12 @@ const render = new Render({
   screenHeight: 540,
   shapes: [cube],
   objects: [
-    new ShapeInstance(shapes.cube, new Vector3(-1.5, 0, 7)),
-    new ShapeInstance(shapes.cube, new Vector3(1.25, 2, 7.5)),
+    new ShapeInstance({
+      identifier: shapes.cube,
+      translation: new Vector3(-1.5, 0, 7),
+      scale: 1,
+      rotation: new Vector3(0, 0, 0),
+    }),
   ],
 });
 

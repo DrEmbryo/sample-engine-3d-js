@@ -49,15 +49,15 @@ export class Shape {
 }
 
 export class ShapeInstance {
-  identifier = "";
-  position = new Vector3(0, 0, 0);
-
-  constructor(identifier, position) {
-    this.identifier = identifier;
-    this.position = position;
+  constructor({ identifier, translation, scale, rotation }) {
+    this.identifier = identifier || shapes.unknown;
+    this.translation = translation || new Vector3(0, 0, 0);
+    this.scale = scale || 0;
+    this.rotation = rotation || new Vector3(0, 0, 0);
   }
 }
 
 export const shapes = {
   cube: "cube",
+  unknown: "",
 };

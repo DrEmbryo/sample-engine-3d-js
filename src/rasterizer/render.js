@@ -1,4 +1,4 @@
-import { Vector3 } from "threejs-math";
+import { Matrix4, Vector3 } from "threejs-math";
 import { Canvas } from "../ray-tracer/canvas";
 import { clamp } from "../ray-tracer/math";
 import { Camera } from "./camera";
@@ -142,18 +142,112 @@ export class Render {
     }
   }
 
-  renderShape(shape, translation = new Vector3(0, 0, 0)) {
+  renderShape({ shape, instance }) {
     const projected = {};
 
     for (const V of shape.verticies) {
       const { x, y, z } = V;
-      const Vt = new Vector3(x, y, z).add(translation);
+      const Vt = this.transformSape(V, instance);
       projected[`${x}${y}${z}`] = this.camera.projectVertex(Vt);
     }
 
     for (const T of shape.triangles) {
       this.renderTriangel(T, projected);
     }
+  }
+
+  transformSape(vertex, { scale, rotation, translation }) {
+    const scaled = this.scaleShape(vertex, scale);
+    const rotated = this.rotateShape(scaled, rotation);
+    return this.translateShape(rotated, translation);
+  }
+
+  scaleShape(vertex, scale) {
+    // prettier-ignore
+    const scaleMatrix = new Matrix4().set(
+      scale, 0, 0, 0,
+      0, scale, 0, 0,
+      0, 0, scale, 0,
+      0, 0, 0, 1
+    )
+
+    // prettier-ignore
+    const vertexMatrix = new Matrix4().set(
+      vertex.x, 0, 0, 0,
+      vertex.y, 0, 0, 0,
+      vertex.z, 0, 0, 0,
+      1, 0, 0, 0
+    )
+
+    const scaled = scaleMatrix.multiply(vertexMatrix).elements;
+    return new Vector3(scaled[0], scaled[1], scaled[2]);
+  }
+
+  rotateShape(vertex, rotation) {
+    const { x: alpha, y: beta, z: gamma } = rotation;
+    const { cos, sin } = Math;
+
+    // prettier-ignore
+    const vertexMatrix = new Matrix4().set(
+      vertex.x, 0, 0, 0,
+      vertex.y, 0, 0, 0,
+      vertex.z, 0, 0, 0,
+      1, 0, 0, 0
+    );
+
+    // prettier-ignore
+    const rotationMatrixX = new Matrix4().set(
+      1, 0, 0, 0,
+      0, cos(alpha), -sin(alpha), 0,
+      0, sin(alpha), cos(alpha), 0,
+      0, 0, 0, 1
+    );
+
+    // prettier-ignore
+    const rotationMatrixY = new Matrix4().set(
+        cos(beta), 0, sin(beta), 0,
+        0, 1, 0, 0,
+        -sin(beta), 0, cos(beta), 0,
+        0, 0, 0, 1
+      )
+
+    // prettier-ignore
+    const rotationMatrixZ = new Matrix4().set(
+        cos(gamma), -sin(gamma), 0, 0,
+        sin(gamma), cos(gamma), 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1
+      )
+
+    const generalRotation = rotationMatrixX
+      .multiply(rotationMatrixY)
+      .multiply(rotationMatrixZ);
+
+    const rotated = generalRotation.multiply(vertexMatrix).elements;
+
+    return new Vector3(rotated[0], rotated[1], rotated[2]);
+  }
+
+  translateShape(vertex, translation) {
+    const { x, y, z } = translation;
+
+    // prettier-ignore
+    const translationMatrix = new Matrix4().set(
+      1, 0, 0, x,
+      0, 1, 0, y,
+      0, 0, 1, z,
+      0, 0, 0, 1
+    );
+    // prettier-ignore
+    const vertexMatrix = new Matrix4().set(
+      vertex.x, 0, 0, 0,
+      vertex.y, 0, 0, 0,
+      vertex.z, 0, 0, 0,
+      1, 0, 0, 0
+    );
+
+    const translated = translationMatrix.multiply(vertexMatrix).elements;
+    return new Vector3(translated[0], translated[1], translated[2]);
   }
 
   renderTriangel(triangle, projected) {
@@ -175,7 +269,10 @@ export class Render {
   }
 
   renderInstance(instance) {
-    this.renderShape(this.scene.shapes[instance.identifier], instance.position);
+    this.renderShape({
+      instance,
+      shape: this.scene.shapes[instance.identifier],
+    });
   }
 
   swap(p0, p1) {
@@ -191,15 +288,12 @@ export class Render {
       return [d0];
     }
     const values = [];
-
     const a = (d1 - d0) / (i1 - i0);
     let d = d0;
-
     for (let i = i0; i < i1; i++) {
       values.push(d);
       d = d + a;
     }
-
     return values;
   }
 }
