@@ -24,17 +24,14 @@ export class Shape {
   identifier = "";
   verticies = [];
   triangles = [];
+  boundingSphere = {
+    center: 0,
+    r: 0,
+  };
 
-  constructor(
-    identifier,
-    verticies,
-    edges,
-    translation = new Vector3(1, 1, 1)
-  ) {
+  constructor(identifier, verticies, edges) {
     this.identifier = identifier;
-    this.verticies = verticies.map((v) =>
-      new Vector3(v.x, v.y, v.z).add(translation)
-    );
+    this.verticies = verticies;
 
     this.triangles = edges.map(
       ({ p0, p1, p2, color }) =>
@@ -45,6 +42,28 @@ export class Shape {
           color
         )
     );
+
+    this.boundingSphere = this.getBoundinSphere(verticies);
+  }
+
+  getBoundinSphere(verticies) {
+    let radius = 0;
+
+    if (!verticies.length) return { center: new Vector3(0, 0, 0), radius };
+
+    const centroid = new Vector3(0, 0, 0);
+
+    verticies.forEach((vertex) => centroid.add(vertex));
+
+    const center = centroid.divideScalar(verticies.length);
+
+    verticies.forEach((vertex) => {
+      const { x, y, z } = vertex.sub(center);
+      const distance = Math.sqrt(x ** 2 + y ** 2 + z ** 2);
+      radius = Math.max(radius, distance);
+    });
+
+    return { center, radius };
   }
 }
 
